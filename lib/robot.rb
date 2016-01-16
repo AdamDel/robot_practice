@@ -1,11 +1,21 @@
 class Robot
-  attr_accessor :position, :items, :items_weight,  :health, :equipped_weapon
+  
+  @@robots = []
+  attr_accessor :position, :items, :items_weight,  :health, :equipped_weapon, :shield_points, :robots
   def initialize
     @position = [0, 0]
     @items = []
     @items_weight = 0
     @health = 100
     @equipped_weapon = nil
+    @shield_points = 0
+    @@robots << self
+  end
+
+  class << self
+    def robots
+       @@robots
+    end
   end
 
   def move_left
@@ -61,7 +71,9 @@ class Robot
   end
 
   def wound(damage)
-    @health -= damage
+    
+    @health -= damage - shield_points
+    @health = 100 if @health > 100
     @health = 0 if @health < 0 
   end
 
@@ -100,12 +112,34 @@ class Robot
       robot.wound(5)
     end
   end
+  def self.clear_robots
+    @@robots = []
+  end
+
   def attack!(robot)
     if robot.class != Robot
       raise InvalidAttack, "not a robot"
     else
       attack(robot)
     end
+  end
+
+  def scanning  
+    scan_result = []
+    scan_result << Robot.in_position(@position[0]-1, @position[1])
+    scan_result << Robot.in_position(@position[0]+1, @position[1])
+    scan_result << Robot.in_position(@position[0], @position[1]-1)
+    scan_result << Robot.in_position(@position[0], @position[1]+1)
+    scan_result.delete([])
+    scan_result 
+  end
+
+  def self.in_position(x,y)
+    robots_in_pos = []
+    @@robots.each do |robot|
+      robots_in_pos << robot if robot.position[0] == x && robot.position[1] == y
+    end
+    robots_in_pos
   end
 
 end
